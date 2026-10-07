@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F2F5EF">
+<title>Revisión de órdenes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E6A3E'/%3E%3Cpath d='M7 17c2.4 1.9 4.4 4 6.3 6.6C17.2 16.7 21.6 11.3 26 8' fill='none' stroke='%23F6C744' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --film: #F2F5EF;        /* plástico de invernadero */
+    --blanco: #FFFFFF;
+    --tinta: #1B2A20;
+    --gris: #56665B;
+    --linea: #D2DACF;
+    --hoja: #2E6A3E;
+    --hoja-oscura: #22512F;
+    --crisantemo: #F6C744;
+    --crisantemo-lavado: #FFF3C4;
+    --ambar: #8A5A00;
+    --vencida: #B3261E;
+
+    --condensada: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif-condensed, sans-serif;
+    --texto: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--film);
+    color: var(--tinta);
+    font-family: var(--texto);
+    font-size: 1.0625rem;
+    line-height: 1.45;
+  }
+
+  .hoja {
+    max-width: 38rem;
+    margin: 0 auto;
+    padding: 0 16px calc(9.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* ---------- encabezado ---------- */
+  .encabezado { padding: 1.75rem 0 1.25rem; }
+  .encabezado__contexto {
+    margin: 0;
+    color: var(--gris);
+    font-size: 0.9375rem;
+  }
+  .encabezado__nombre {
+    margin: 0.1rem 0 0.5rem;
+    font-family: var(--condensada);
+    font-weight: 700;
+    font-size: clamp(3rem, 15vw, 4.25rem);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+  .encabezado__resumen { margin: 0; max-width: 32rem; }
+  .encabezado__resumen strong { font-weight: 700; }
+  .encabezado__vencidas { color: var(--vencida); font-weight: 700; }
+
+  /* ---------- lista ---------- */
+  .lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 2px solid var(--tinta);
+  }
+  .os { border-bottom: 1px solid var(--linea); }
+
+  .os__fila {
+    display: grid;
+    grid-template-columns: 3.5rem 1fr 2.75rem;
+    gap: 0 0.875rem;
+    align-items: start;
+    padding: 1rem 0.25rem 1.05rem 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 160ms ease;
+  }
+  .os__check:checked ~ .os__fila { background: var(--crisantemo-lavado); }
+
+  /* Edad de la orden: lo primero que se lee */
+  .os__edad {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding-top: 0.05rem;
+    font-family: var(--condensada);
+    color: var(--gris);
+  }
+  .os__edad b {
+    font-weight: 700;
+    font-size: 2.25rem;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+    color: var(--tinta);
+  }
+  .os__edad small { font-size: 0.875rem; font-weight: 500; line-height: 1.2; }
+  .os__edad--media b, .os__edad--media small { color: var(--ambar); }
+  .os__edad--vieja b, .os__edad--vieja small { color: var(--vencida); }
+  .os__edad--hoy b { font-size: 1.5rem; line-height: 1.2; }
+
+  .os__cuerpo { min-width: 0; }
+  .os__num {
+    display: block;
+    font-family: var(--condensada);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    color: var(--gris);
+  }
+  .os__desc {
+    display: block;
+    margin: 0.1rem 0 0.3rem;
+    overflow-wrap: anywhere;
+  }
+  .os__meta { display: block; color: var(--gris); font-size: 0.9375rem; }
+  .os__reiterada { color: var(--tinta); font-weight: 700; }
+
+  /* Casilla: input real (accesible), dibujada a mano encima */
+  .os__check {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+  .os__caja {
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-top: 0.1rem;
+    justify-self: end;
+    border: 2.5px solid var(--tinta);
+    border-radius: 7px;
+    background: var(--blanco);
+    display: grid;
+    place-items: center;
+  }
+  .os__caja svg { width: 1.9rem; height: 1.9rem; overflow: visible; }
+  .os__caja path {
+    fill: none;
+    stroke: var(--hoja);
+    stroke-width: 3.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+  }
+  .os__check:checked ~ .os__fila .os__caja { border-color: var(--hoja); background: var(--crisantemo); }
+  .os__check:checked ~ .os__fila .os__caja path {
+    stroke: var(--hoja-oscura);
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 260ms cubic-bezier(.6, 0, .3, 1);
+  }
+  .os__check:focus-visible ~ .os__fila { outline: 3px solid var(--hoja); outline-offset: -3px; }
+
+  .os__estado-guardado {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--hoja-oscura);
+  }
+  .os__check:not(:checked) ~ .os__fila .os__estado-guardado { display: none; }
+
+  /* ---------- mensajes de estado (cargando, error, vacía) ---------- */
+  .aviso { padding: 2.5rem 0 1rem; max-width: 30rem; }
+  .aviso h1 {
+    margin: 0 0 0.5rem;
+    font-family: var(--condensada);
+    font-weight: 700;
+    font-size: 2.25rem;
+    line-height: 1;
+  }
+  .aviso p { margin: 0 0 1rem; }
+
+  /* ---------- barra de guardar ---------- */
+  .barra {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--blanco);
+    border-top: 2px solid var(--tinta);
+    padding: 0.75rem 16px calc(0.875rem + env(safe-area-inset-bottom));
+  }
+  .barra__interior { max-width: 38rem; margin: 0 auto; }
+  .barra__estado {
+    margin: 0 0 0.6rem;
+    min-height: 1.45em;
+    font-size: 0.9375rem;
+    color: var(--gris);
+  }
+  .barra__estado--pendiente { color: var(--tinta); font-weight: 700; }
+  .barra__estado--error { color: var(--vencida); font-weight: 700; }
+  .barra__estado--ok { color: var(--hoja-oscura); font-weight: 700; }
+
+  .boton {
+    display: block;
+    width: 100%;
+    min-height: 3.5rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--hoja);
+    color: var(--blanco);
+    font-family: var(--texto);
+    font-size: 1.125rem;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .boton:hover, .boton:active { background: var(--hoja-oscura); }
+  .boton:focus-visible { outline: 3px solid var(--crisantemo); outline-offset: 3px; }
+  .boton:disabled { background: #9DB3A2; cursor: default; }
+  .boton--secundario {
+    display: inline-block;
+    width: auto;
+    min-height: 3rem;
+    padding: 0 1.5rem;
+  }
+
+  [hidden] { display: none !important; }
+
+  @media (max-width: 380px) {
+    .os__fila { grid-template-columns: 2.9rem 1fr 2.6rem; gap: 0 0.7rem; }
+    .os__edad b { font-size: 2rem; }
+  }
+  @media (min-width: 640px) {
+    .encabezado { padding-top: 3rem; }
+    .os__fila { padding-left: 0.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .os__fila, .os__check:checked ~ .os__fila .os__caja path { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main class="hoja" id="hoja">
+  <div class="aviso" id="cargando">
+    <p>Cargando tus órdenes…</p>
+  </div>
+
+  <div class="aviso" id="error" hidden>
+    <h1 id="error-titulo">Este enlace ya no funciona</h1>
+    <p id="error-texto">Abre el enlace del mensaje de revisión más reciente que te llegó por WhatsApp.</p>
+    <button class="boton boton--secundario" id="reintentar" type="button" hidden>Reintentar</button>
+  </div>
+
+  <section id="contenido" hidden>
+    <header class="encabezado">
+      <p class="encabezado__contexto" id="contexto"></p>
+      <h1 class="encabezado__nombre" id="nombre"></h1>
+      <p class="encabezado__resumen" id="resumen"></p>
+    </header>
+    <ul class="lista" id="lista"></ul>
+  </section>
+</main>
+
+<footer class="barra" id="barra" hidden>
+  <div class="barra__interior">
+    <p class="barra__estado" id="barra-estado" role="status" aria-live="polite"></p>
+    <button class="boton" id="guardar" type="button">Guardar revisión</button>
+  </div>
+</footer>
+
+<script>
+  // ------------------------------------------------------------------
+  // CONFIGURACIÓN: los datos de TU proyecto de Supabase.
+  // (Supabase > Project Settings > API Keys)
+  // Va la llave PÚBLICA ("publishable" o "anon"). NUNCA la secreta.
+  // ------------------------------------------------------------------
+  const SUPABASE_URL = 'https://eqkzmrfnnjvqbkktkhmm.supabase.co';
+  const SUPABASE_LLAVE_PUBLICA = 'sb_publishable_nkxwQP7NT8kJVSyeqnsDrA_7RdLQfpM';
+  // ------------------------------------------------------------------
+
+  const ZONA = 'America/Bogota';
+  const $ = (id) => document.getElementById(id);
+  const token = new URLSearchParams(location.search).get('t') ||
+    new URLSearchParams(location.hash.slice(1)).get('t') || '';
+  const claveBorrador = 'revision-borrador-' + token;
+
+  let ordenes = [];            // como vienen del servidor
+  const marcadas = new Map();  // numero_os -> boolean (lo que se ve en pantalla)
+  let guardando = false;
+  let cabecera = { sede: '', nombre: '' };
+
+  // ---------- utilidades ----------
+  function rpc(nombre, cuerpo) {
+    const headers = { apikey: SUPABASE_LLAVE_PUBLICA, 'Content-Type': 'application/json' };
+    if (SUPABASE_LLAVE_PUBLICA.startsWith('eyJ')) headers.Authorization = 'Bearer ' + SUPABASE_LLAVE_PUBLICA;
+    const control = new AbortController();
+    const reloj = setTimeout(() => control.abort(), 20000);
+    return fetch(SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/' + nombre, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(cuerpo),
+      signal: control.signal,
+    }).then((res) => {
+      clearTimeout(reloj);
+      if (!res.ok) throw new Error('El servidor respondió ' + res.status);
+      return res.json();
+    }, (err) => {
+      clearTimeout(reloj);
+      throw err;
+    });
+  }
+
+  const fmtDia = new Intl.DateTimeFormat('es-CO', { timeZone: ZONA, day: 'numeric', month: 'short' });
+  const fmtCompleto = new Intl.DateTimeFormat('es-CO', {
+    timeZone: ZONA, weekday: 'long', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
+  });
+  const sinPunto = (s) => s.replace(/\./g, '').replace(/\s+/g, ' ');
+  const fechaHora = (iso) => fmtCompleto.format(new Date(iso))
+    .replace(/\s*a\.\s*m\./, ' a.m.').replace(/\s*p\.\s*m\./, ' p.m.').replace(/\s+/g, ' ');
+
+  function diasDesde(iso) {
+    return Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 86400000));
+  }
+
+  function plural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+
+  function leerBorrador() {
+    try { return JSON.parse(localStorage.getItem(claveBorrador) || 'null'); } catch (e) { return null; }
+  }
+  function guardarBorrador() {
+    try {
+      const cambios = pendientes();
+      if (cambios.length) localStorage.setItem(claveBorrador, JSON.stringify(cambios));
+      else localStorage.removeItem(claveBorrador);
+    } catch (e) { /* sin almacenamiento: no pasa nada */ }
+  }
+
+  function pendientes() {
+    return ordenes
+      .filter((o) => marcadas.get(o.numero_os) !== o.ejecutada)
+      .map((o) => ({ numero_os: o.numero_os, ejecutada: marcadas.get(o.numero_os) }));
+  }
+
+  // ---------- pantalla de error ----------
+  function mostrarError(titulo, texto, conReintento) {
+    $('cargando').hidden = true;
+    $('contenido').hidden = true;
+    $('barra').hidden = true;
+    $('error-titulo').textContent = titulo;
+    $('error-texto').textContent = texto;
+    $('reintentar').hidden = !conReintento;
+    $('error').hidden = false;
+  }
+
+  // ---------- dibujar la lista ----------
+  function filaHTML(o, i) {
+    const dias = diasDesde(o.fecha_creacion);
+    const claseEdad = dias === 0 ? 'os__edad--hoy' : dias > 30 ? 'os__edad--vieja' : dias > 14 ? 'os__edad--media' : '';
+    const li = document.createElement('li');
+    li.className = 'os';
+    const id = 'os-' + i;
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.className = 'os__check';
+    input.id = id;
+    input.checked = !!marcadas.get(o.numero_os);
+    input.addEventListener('change', () => {
+      marcadas.set(o.numero_os, input.checked);
+      guardarBorrador();
+      actualizarBarra();
+    });
+
+    const label = document.createElement('label');
+    label.className = 'os__fila';
+    label.htmlFor = id;
+
+    const edad = document.createElement('span');
+    edad.className = 'os__edad ' + claseEdad;
+    edad.innerHTML = dias === 0 ? '<b>hoy</b>' : '<b></b><small></small>';
+    if (dias > 0) {
+      edad.querySelector('b').textContent = dias;
+      edad.querySelector('small').textContent = dias === 1 ? 'día' : 'días';
+    }
+
+    const cuerpo = document.createElement('span');
+    cuerpo.className = 'os__cuerpo';
+    const num = document.createElement('span');
+    num.className = 'os__num';
+    num.textContent = o.numero_os;
+    const desc = document.createElement('span');
+    desc.className = 'os__desc';
+    desc.textContent = o.descripcion;
+    const meta = document.createElement('span');
+    meta.className = 'os__meta';
+    meta.textContent = sinPunto(fmtDia.format(new Date(o.fecha_creacion))) +
+      (o.persona_reporta ? ', reportó ' + o.persona_reporta : '') + '. ';
+    if (o.reiteraciones > 0) {
+      const r = document.createElement('span');
+      r.className = 'os__reiterada';
+      r.textContent = 'Reportada ' + (o.reiteraciones + 1) + ' veces.';
+      meta.appendChild(r);
+    }
+    cuerpo.append(num, desc, meta);
+
+    if (o.ejecutada) {
+      const g = document.createElement('span');
+      g.className = 'os__estado-guardado';
+      g.textContent = 'Guardada como ejecutada';
+      cuerpo.appendChild(g);
+    }
+
+    const caja = document.createElement('span');
+    caja.className = 'os__caja';
+    caja.setAttribute('aria-hidden', 'true');
+    caja.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3.6 12.9c1.9 1.4 3.5 3.1 5 5.3 3-5.6 7-9.8 11.9-13.2"/></svg>';
+
+    label.append(edad, cuerpo, caja);
+    li.append(input, label);
+    return li;
+  }
+
+  function dibujar(datos) {
+    cabecera = { sede: datos.sede, nombre: datos.nombre };
+    $('contexto').textContent = 'Revisión semanal de ' + datos.sede;
+    $('nombre').textContent = datos.nombre;
+
+    const total = ordenes.length;
+    const vencidas = ordenes.filter((o) => diasDesde(o.fecha_creacion) > 30).length;
+    const resumen = $('resumen');
+    resumen.textContent = '';
+    if (!total) {
+      resumen.textContent = 'No tienes órdenes abiertas en revisión esta semana.';
+    } else {
+      const fuerte = document.createElement('strong');
+      fuerte.textContent = plural(total, 'orden abierta', 'órdenes abiertas');
+      resumen.append('Tienes ', fuerte);
+      if (vencidas) {
+        const v = document.createElement('span');
+        v.className = 'encabezado__vencidas';
+        v.textContent = plural(vencidas, 'con más de 30 días', 'con más de 30 días');
+        resumen.append(', ', v);
+      }
+      resumen.append('. Marca las que ya quedaron ejecutadas y guarda.');
+    }
+
+    const lista = $('lista');
+    lista.textContent = '';
+    ordenes.forEach((o, i) => lista.appendChild(filaHTML(o, i)));
+    lista.hidden = !total;
+
+    $('cargando').hidden = true;
+    $('error').hidden = true;
+    $('contenido').hidden = false;
+    $('barra').hidden = !total;
+    actualizarBarra(datos.guardado_en);
+  }
+
+  let ultimoGuardado = null;
+  function actualizarBarra(guardadoEn, mensaje) {
+    if (guardadoEn !== undefined) ultimoGuardado = guardadoEn;
+    const estado = $('barra-estado');
+    const boton = $('guardar');
+    const cambios = pendientes().length;
+    estado.className = 'barra__estado';
+
+    if (mensaje) {
+      estado.textContent = mensaje.texto;
+      estado.classList.add('barra__estado--' + mensaje.tipo);
+    } else if (cambios) {
+      estado.textContent = plural(cambios, 'cambio sin guardar', 'cambios sin guardar');
+      estado.classList.add('barra__estado--pendiente');
+    } else if (ultimoGuardado) {
+      estado.textContent = 'Guardada el ' + fechaHora(ultimoGuardado);
+    } else {
+      estado.textContent = 'Si ninguna está ejecutada, igual toca Guardar revisión.';
+    }
+
+    boton.disabled = guardando;
+    boton.textContent = guardando ? 'Guardando…' : 'Guardar revisión';
+  }
+
+  // ---------- cargar ----------
+  function cargar() {
+    $('error').hidden = true;
+    $('cargando').hidden = false;
+    if (!token) {
+      mostrarError('Falta el código del enlace',
+        'Abre esta página desde el enlace del mensaje de revisión que te llegó por WhatsApp.', false);
+      return;
+    }
+    rpc('revision_lista', { p_token: token }).then((datos) => {
+      if (!datos || !datos.ok) {
+        const vencido = datos && datos.motivo === 'enlace_vencido';
+        mostrarError(vencido ? 'Este enlace ya venció' : 'Este enlace ya no funciona',
+          'Abre el enlace del mensaje de revisión más reciente que te llegó por WhatsApp. Cada martes llega uno nuevo.', false);
+        return;
+      }
+      ordenes = datos.ordenes || [];
+      marcadas.clear();
+      ordenes.forEach((o) => marcadas.set(o.numero_os, !!o.ejecutada));
+
+      // Cambios que no alcanzaron a guardarse la vez anterior (sin señal).
+      const borrador = leerBorrador();
+      let recuperados = 0;
+      if (Array.isArray(borrador)) {
+        borrador.forEach((b) => {
+          if (marcadas.has(b.numero_os) && marcadas.get(b.numero_os) !== b.ejecutada) {
+            marcadas.set(b.numero_os, !!b.ejecutada);
+            recuperados++;
+          }
+        });
+      }
+      dibujar(datos);
+      if (recuperados) {
+        actualizarBarra(undefined, {
+          tipo: 'pendiente',
+          texto: 'Recuperé ' + plural(recuperados, 'cambio que no se había guardado', 'cambios que no se habían guardado') + '. Toca Guardar revisión.',
+        });
+      }
+    }).catch(() => {
+      mostrarError('No se pudo cargar la lista',
+        'Revisa la señal o los datos del celular y vuelve a intentar.', true);
+    });
+  }
+
+  // ---------- guardar ----------
+  function guardar() {
+    if (guardando) return;
+    const cambios = pendientes();
+    guardando = true;
+    actualizarBarra();
+    rpc('revision_guardar', { p_token: token, p_marcas: cambios }).then((r) => {
+      guardando = false;
+      if (!r || !r.ok) {
+        actualizarBarra(undefined, {
+          tipo: 'error',
+          texto: r && r.motivo === 'enlace_vencido'
+            ? 'No se guardó: el enlace venció. Usa el del mensaje más reciente.'
+            : 'No se guardó: este enlace ya fue reemplazado. Usa el del mensaje más reciente.',
+        });
+        return;
+      }
+      cambios.forEach((c) => {
+        const o = ordenes.find((x) => x.numero_os === c.numero_os);
+        if (o) o.ejecutada = c.ejecutada;
+      });
+      guardarBorrador();
+      dibujar({ sede: cabecera.sede, nombre: cabecera.nombre, guardado_en: r.guardado_en });
+      const ejecutadas = cambios.filter((c) => c.ejecutada).length;
+      actualizarBarra(r.guardado_en, {
+        tipo: 'ok',
+        texto: cambios.length
+          ? 'Guardada. ' + (ejecutadas ? plural(ejecutadas, 'orden pasa', 'órdenes pasan') + ' a Resuelto en unos minutos.' : 'Cambios registrados.')
+          : 'Guardada. Quedó constancia de que revisaste la lista.',
+      });
+    }).catch(() => {
+      guardando = false;
+      actualizarBarra(undefined, {
+        tipo: 'error',
+        texto: 'No se guardó por falta de señal. Tus marcas siguen aquí: vuelve a tocar Guardar revisión.',
+      });
+    });
+  }
+
+  $('guardar').addEventListener('click', guardar);
+  $('reintentar').addEventListener('click', cargar);
+  // Si la página ya estaba abierta y llega el enlace de otra semana, solo
+  // cambia lo que va después de "#": se recarga para leer el código nuevo.
+  window.addEventListener('hashchange', () => location.reload());
+  window.addEventListener('beforeunload', (e) => {
+    if (pendientes().length) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  cargar();
+</script>
+</body>
+</html>
