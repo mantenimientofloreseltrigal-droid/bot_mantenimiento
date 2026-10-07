@@ -423,7 +423,7 @@
 
   function dibujar(datos) {
     cabecera = { sede: datos.sede, nombre: datos.nombre };
-    $('contexto').textContent = 'Revisión semanal de ' + datos.sede;
+    $('contexto').textContent = 'Órdenes abiertas de ' + datos.sede;
     $('nombre').textContent = datos.nombre;
 
     const total = ordenes.length;
@@ -494,7 +494,7 @@
       if (!datos || !datos.ok) {
         const vencido = datos && datos.motivo === 'enlace_vencido';
         mostrarError(vencido ? 'Este enlace ya venció' : 'Este enlace ya no funciona',
-          'Abre el enlace del mensaje de revisión más reciente que te llegó por WhatsApp. Cada martes llega uno nuevo.', false);
+          'Abre el enlace del mensaje de revisión más reciente que te llegó por WhatsApp. Cada martes y viernes llega uno nuevo.', false);
         return;
       }
       ordenes = datos.ordenes || [];
