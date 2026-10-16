@@ -225,18 +225,129 @@
     padding: 0 1.5rem;
   }
 
+  /* Enlace a la lista de bloques dentro de una orden de la revisión */
+  .os__bloques {
+    display: block;
+    margin: -0.35rem 0 1rem calc(3.5rem + 0.875rem);
+    padding: 0.55rem 0.75rem;
+    border: 2px solid var(--hoja);
+    border-radius: 8px;
+    color: var(--hoja-oscura);
+    background: var(--blanco);
+    font-weight: 700;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .os__bloques b { font-family: var(--condensada); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+  .os__bloques:focus-visible { outline: 3px solid var(--crisantemo); outline-offset: 2px; }
+
+  /* ---------- lista de bloques ---------- */
+  .bq-volver {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--hoja-oscura);
+    font-weight: 700;
+  }
+  .bq-num {
+    margin: 0;
+    font-family: var(--condensada);
+    font-weight: 600;
+    font-size: 1.0625rem;
+    color: var(--gris);
+  }
+  .bq-desc { margin: 0.15rem 0 1.1rem; max-width: 32rem; overflow-wrap: anywhere; }
+  .bq-avance { display: flex; align-items: baseline; gap: 0.6rem; margin: 0; }
+  .bq-avance b {
+    font-family: var(--condensada);
+    font-weight: 700;
+    font-size: clamp(3.75rem, 19vw, 5rem);
+    line-height: 0.85;
+    font-variant-numeric: tabular-nums;
+  }
+  .bq-avance span { font-size: 1.0625rem; color: var(--gris); }
+  .bq-avance span strong { color: var(--tinta); }
+  .bq-barra {
+    height: 10px;
+    margin: 0.85rem 0 0;
+    border-radius: 5px;
+    background: var(--linea);
+    overflow: hidden;
+  }
+  .bq-barra i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--hoja);
+    transition: width 220ms ease;
+  }
+  .bq-nota {
+    margin: 1rem 0 0;
+    padding: 0.7rem 0.85rem;
+    border-left: 4px solid var(--hoja);
+    background: var(--crisantemo-lavado);
+    font-weight: 700;
+  }
+  .bq-nota--cerrada { border-left-color: var(--gris); background: var(--blanco); color: var(--gris); }
+
+  .bq-grilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3.6rem, 1fr));
+    gap: 8px;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .bq {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1.05;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    padding: 0.5rem 0 0;
+    border: 2.5px solid var(--tinta);
+    border-radius: 9px;
+    background: var(--blanco);
+    color: var(--tinta);
+    font-family: var(--condensada);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background-color 140ms ease, transform 90ms ease;
+  }
+  .bq:active { transform: scale(0.95); }
+  .bq:focus-visible { outline: 3px solid var(--hoja); outline-offset: 2px; }
+  .bq__n { font-weight: 700; font-size: 1.75rem; line-height: 1; font-variant-numeric: tabular-nums; }
+  .bq__fecha { font-family: var(--texto); font-size: 0.6875rem; line-height: 1.1; min-height: 1.1em; color: var(--hoja-oscura); }
+  .bq svg { position: absolute; top: 3px; right: 3px; width: 0.95rem; height: 0.95rem; visibility: hidden; }
+  .bq svg path { fill: none; stroke: var(--hoja-oscura); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+  .bq[aria-pressed="true"] { background: var(--crisantemo); border-color: var(--hoja); color: var(--hoja-oscura); }
+  .bq[aria-pressed="true"] svg { visibility: visible; }
+  .bq--pendiente { border-style: dashed; }
+  .bq:disabled { cursor: default; transform: none; }
+  .bq:disabled:not([aria-pressed="true"]) { border-color: var(--linea); color: var(--gris); }
+
+  .barra__fila { display: flex; align-items: center; gap: 0.75rem; }
+  .barra__fila .barra__estado { flex: 1; margin: 0; }
+  .boton--chico { width: auto; min-height: 2.75rem; padding: 0 1rem; font-size: 1rem; }
+
   [hidden] { display: none !important; }
 
   @media (max-width: 380px) {
     .os__fila { grid-template-columns: 2.9rem 1fr 2.6rem; gap: 0 0.7rem; }
     .os__edad b { font-size: 2rem; }
+    .os__bloques { margin-left: calc(2.9rem + 0.7rem); }
+    .bq-grilla { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(3.3rem, 1fr)); }
   }
   @media (min-width: 640px) {
     .encabezado { padding-top: 3rem; }
     .os__fila { padding-left: 0.5rem; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .os__fila, .os__check:checked ~ .os__fila .os__caja path { transition: none; }
+    .os__fila, .os__check:checked ~ .os__fila .os__caja path, .bq, .bq-barra i { transition: none; }
+    .bq:active { transform: none; }
   }
 </style>
 </head>
@@ -260,7 +371,27 @@
     </header>
     <ul class="lista" id="lista"></ul>
   </section>
+
+  <section id="bloques" hidden>
+    <header class="encabezado">
+      <p class="encabezado__contexto" id="bq-contexto"></p>
+      <p class="bq-num" id="bq-num"></p>
+      <p class="bq-desc" id="bq-desc"></p>
+      <p class="bq-avance"><b id="bq-hechos">0</b><span id="bq-de"></span></p>
+      <div class="bq-barra" aria-hidden="true"><i id="bq-barra"></i></div>
+      <p class="bq-nota" id="bq-nota" hidden></p>
+      <a class="bq-volver" id="bq-volver" href="#" hidden>Volver a mis órdenes</a>
+    </header>
+    <ul class="bq-grilla" id="bq-grilla" aria-label="Bloques"></ul>
+  </section>
 </main>
+
+<footer class="barra" id="barra-bloques" hidden>
+  <div class="barra__interior barra__fila">
+    <p class="barra__estado" id="bq-estado" role="status" aria-live="polite"></p>
+    <button class="boton boton--chico" id="bq-reintentar" type="button" hidden>Reintentar</button>
+  </div>
+</footer>
 
 <footer class="barra" id="barra" hidden>
   <div class="barra__interior">
@@ -347,6 +478,8 @@
     $('cargando').hidden = true;
     $('contenido').hidden = true;
     $('barra').hidden = true;
+    $('bloques').hidden = true;
+    $('barra-bloques').hidden = true;
     $('error-titulo').textContent = titulo;
     $('error-texto').textContent = texto;
     $('reintentar').hidden = !conReintento;
@@ -418,6 +551,20 @@
 
     label.append(edad, cuerpo, caja);
     li.append(input, label);
+
+    // Orden con lista de bloques: avance y enlace a la lista.
+    if (o.bloques && o.bloques.token) {
+      const a = document.createElement('a');
+      a.className = 'os__bloques';
+      a.href = '#b=' + encodeURIComponent(o.bloques.token);
+      const n = document.createElement('b');
+      n.textContent = o.bloques.marcados + ' de ' + o.bloques.total;
+      a.append(n, ' bloques intervenidos. Abrir la lista de bloques');
+      a.addEventListener('click', () => {
+        try { sessionStorage.setItem('volver-revision', location.hash); } catch (e) { /* nada */ }
+      });
+      li.appendChild(a);
+    }
     return li;
   }
 
@@ -565,15 +712,240 @@
   }
 
   $('guardar').addEventListener('click', guardar);
-  $('reintentar').addEventListener('click', cargar);
+  $('reintentar').addEventListener('click', () => (tokenBloques ? bloquesApp.cargar() : cargar()));
   // Si la página ya estaba abierta y llega el enlace de otra semana, solo
   // cambia lo que va después de "#": se recarga para leer el código nuevo.
   window.addEventListener('hashchange', () => location.reload());
   window.addEventListener('beforeunload', (e) => {
-    if (pendientes().length) { e.preventDefault(); e.returnValue = ''; }
+    if (pendientes().length || (bloquesApp && bloquesApp.hayPendientes())) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  cargar();
+  // ==================================================================
+  // LISTA DE BLOQUES (#b=...): un botón por bloque; cada toque se guarda
+  // solo. Sin señal, lo marcado queda en el celular y se envía después.
+  // ==================================================================
+  const tokenBloques = new URLSearchParams(location.hash.slice(1)).get('b') || '';
+  let bloquesApp = null;
+
+  function crearBloquesApp(tk) {
+    const clave = 'bloques-pendientes-' + tk;
+    let datos = null;
+    let servidor = new Map();     // bloque -> fecha en que se marcó (lo guardado)
+    const porEnviar = new Map();  // bloque -> true/false (tocado y aún no guardado)
+    let enviando = false;
+    let sinSenal = false;
+    let ultimoGuardado = null;
+    let ultimoToque = null;
+    let espera = null;
+    let reintento = null;
+    const botones = new Map();
+    const fmtCorto = new Intl.DateTimeFormat('es-CO', { timeZone: ZONA, day: 'numeric', month: 'short' });
+    const fmtHora = new Intl.DateTimeFormat('es-CO', { timeZone: ZONA, hour: 'numeric', minute: '2-digit' });
+    const hora = (ms) => fmtHora.format(new Date(ms)).replace(/\s*a\.\s*m\./, ' a.m.').replace(/\s*p\.\s*m\./, ' p.m.').replace(/\s+/g, ' ');
+
+    function leer() {
+      try {
+        const g = JSON.parse(localStorage.getItem(clave) || '[]');
+        if (Array.isArray(g)) g.forEach((c) => { if (Number.isInteger(c.bloque) && typeof c.marcado === 'boolean') porEnviar.set(c.bloque, c.marcado); });
+      } catch (e) { /* sin almacenamiento */ }
+    }
+    function persistir() {
+      try {
+        if (porEnviar.size) localStorage.setItem(clave, JSON.stringify([...porEnviar].map(([bloque, marcado]) => ({ bloque, marcado }))));
+        else localStorage.removeItem(clave);
+      } catch (e) { /* sin almacenamiento */ }
+    }
+    const marcado = (b) => (porEnviar.has(b) ? porEnviar.get(b) : servidor.has(b));
+
+    function aplicar(d) {
+      datos = d;
+      servidor = new Map((d.marcas || []).map((m) => [m.bloque, m.marcado_en]));
+      for (const [b, v] of [...porEnviar]) {
+        if (b < d.desde || b > d.hasta || v === servidor.has(b)) porEnviar.delete(b);
+      }
+      if (d.cerrada) porEnviar.clear();
+      persistir();
+    }
+
+    function construir() {
+      const grilla = $('bq-grilla');
+      grilla.textContent = '';
+      botones.clear();
+      for (let b = datos.desde; b <= datos.hasta; b++) {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'bq';
+        btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 12.9c1.9 1.4 3.5 3.1 5 5.3 3-5.6 7-9.8 11.9-13.2"/></svg>' +
+          '<span class="bq__n"></span><span class="bq__fecha"></span>';
+        btn.querySelector('.bq__n').textContent = b;
+        btn.addEventListener('click', () => tocar(b));
+        li.appendChild(btn);
+        grilla.appendChild(li);
+        botones.set(b, btn);
+      }
+    }
+
+    function dibujar() {
+      const total = datos.hasta - datos.desde + 1;
+      let hechos = 0;
+      for (const [b, btn] of botones) {
+        const si = marcado(b);
+        if (si) hechos++;
+        btn.setAttribute('aria-pressed', si ? 'true' : 'false');
+        btn.classList.toggle('bq--pendiente', porEnviar.has(b));
+        btn.disabled = !!datos.cerrada;
+        const fecha = si && servidor.has(b) && !porEnviar.has(b) ? sinPunto(fmtCorto.format(new Date(servidor.get(b)))) : '';
+        btn.querySelector('.bq__fecha').textContent = fecha;
+        btn.setAttribute('aria-label', 'Bloque ' + b + (si ? (fecha ? ', intervenido el ' + fecha : ', intervenido') : ', sin intervenir') + (porEnviar.has(b) ? ', por enviar' : ''));
+      }
+      $('bq-hechos').textContent = hechos;
+      const de = $('bq-de');
+      de.textContent = '';
+      const fuerte = document.createElement('strong');
+      fuerte.textContent = 'de ' + total;
+      de.append(fuerte, ' bloques intervenidos');
+      $('bq-barra').style.width = (total ? Math.round((hechos / total) * 100) : 0) + '%';
+
+      const nota = $('bq-nota');
+      nota.className = 'bq-nota';
+      if (datos.cerrada) {
+        nota.textContent = datos.completada_en
+          ? 'Lista completa. La orden ya pasó a Resuelto; la lista queda solo para consulta.'
+          : 'Esta orden ya está cerrada. La lista queda solo para consulta.';
+        nota.classList.add('bq-nota--cerrada');
+        nota.hidden = false;
+      } else if (hechos === total && !porEnviar.size) {
+        nota.textContent = 'Completaste los ' + total + ' bloques. La orden pasa a Resuelto en unos minutos.';
+        nota.hidden = false;
+      } else {
+        nota.hidden = true;
+      }
+
+      const estado = $('bq-estado');
+      estado.className = 'barra__estado';
+      $('bq-reintentar').hidden = true;
+      if (datos.cerrada) {
+        estado.textContent = 'Orden cerrada.';
+      } else if (porEnviar.size && sinSenal) {
+        estado.textContent = 'Sin señal: ' + plural(porEnviar.size, 'bloque por enviar', 'bloques por enviar') + '. Se envían solos cuando vuelva la señal.';
+        estado.classList.add('barra__estado--error');
+        $('bq-reintentar').hidden = false;
+      } else if (porEnviar.size || enviando) {
+        estado.textContent = 'Guardando…';
+        estado.classList.add('barra__estado--pendiente');
+      } else if (ultimoGuardado && ultimoToque) {
+        estado.textContent = 'Guardado: bloque ' + ultimoToque.b + (ultimoToque.marcado ? ' intervenido' : ' desmarcado') + ' a las ' + hora(ultimoGuardado);
+        estado.classList.add('barra__estado--ok');
+      } else {
+        estado.textContent = 'Toca un bloque cuando quede intervenido. Se guarda solo.';
+      }
+    }
+
+    function tocar(b) {
+      if (!datos || datos.cerrada) return;
+      const nuevo = !marcado(b);
+      if (nuevo === servidor.has(b)) porEnviar.delete(b);
+      else porEnviar.set(b, nuevo);
+      ultimoToque = { b, marcado: nuevo };
+      persistir();
+      dibujar();
+      programar(500);
+    }
+
+    function programar(ms) {
+      clearTimeout(espera);
+      espera = setTimeout(enviar, ms);
+    }
+
+    function enviar() {
+      clearTimeout(reintento);
+      if (enviando || !porEnviar.size || !datos || datos.cerrada) return;
+      enviando = true;
+      const lote = [...porEnviar].map(([bloque, m]) => ({ bloque, marcado: m }));
+      rpc('bloques_marcar', { p_token: tk, p_cambios: lote }).then((r) => {
+        enviando = false;
+        if (!r || !r.ok) {
+          if (r && r.motivo === 'cerrada') {
+            porEnviar.clear();
+            persistir();
+            cargar();
+            return;
+          }
+          mostrarError('Este enlace ya no funciona', 'Pídele a Juan el enlace nuevo de la lista de bloques.', false);
+          $('barra-bloques').hidden = true;
+          return;
+        }
+        // Lo enviado sale de la cola, salvo que lo hayan vuelto a tocar mientras tanto.
+        lote.forEach((c) => { if (porEnviar.get(c.bloque) === c.marcado) porEnviar.delete(c.bloque); });
+        sinSenal = false;
+        ultimoGuardado = Date.now();
+        aplicar(r);
+        dibujar();
+        if (porEnviar.size) programar(300);
+      }).catch(() => {
+        enviando = false;
+        sinSenal = true;
+        dibujar();
+        reintento = setTimeout(enviar, 15000);
+      });
+    }
+
+    function cargar(silencioso) {
+      if (!silencioso) {
+        $('error').hidden = true;
+        $('cargando').hidden = false;
+      }
+      return rpc('bloques_lista', { p_token: tk }).then((d) => {
+        if (!d || !d.ok) {
+          if (silencioso) return;
+          mostrarError('Este enlace ya no funciona', 'Pídele a Juan el enlace de la lista de bloques.', false);
+          return;
+        }
+        const nueva = !datos || datos.desde !== d.desde || datos.hasta !== d.hasta;
+        aplicar(d);
+        $('bq-contexto').textContent = 'Lista de bloques' + (d.sede ? ' de ' + d.sede : '') + (d.nombre ? ', ' + d.nombre : '');
+        $('bq-num').textContent = d.numero_os;
+        $('bq-desc').textContent = d.descripcion;
+        document.title = 'Bloques ' + d.numero_os;
+        if (nueva) construir();
+        dibujar();
+        $('cargando').hidden = true;
+        $('error').hidden = true;
+        $('bloques').hidden = false;
+        $('barra-bloques').hidden = false;
+        if (porEnviar.size) programar(200);
+      }).catch(() => {
+        if (silencioso) return;
+        mostrarError('No se pudo cargar la lista', 'Revisa la señal o los datos del celular y vuelve a intentar.', true);
+      });
+    }
+
+    leer();
+    $('bq-reintentar').addEventListener('click', enviar);
+    window.addEventListener('online', () => { sinSenal = false; enviar(); });
+    // Al volver a la página (ej. después de usar otra app), se trae lo último
+    // por si otra persona marcó bloques.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && datos && !porEnviar.size && !enviando) cargar(true);
+    });
+    let volver = null;
+    try { volver = sessionStorage.getItem('volver-revision'); } catch (e) { /* nada */ }
+    if (volver && /^#t=/.test(volver)) {
+      $('bq-volver').href = volver;
+      $('bq-volver').hidden = false;
+    }
+
+    return { cargar, hayPendientes: () => porEnviar.size > 0 };
+  }
+
+  if (tokenBloques) {
+    document.querySelector('#cargando p').textContent = 'Cargando la lista de bloques…';
+    bloquesApp = crearBloquesApp(tokenBloques);
+    bloquesApp.cargar();
+  } else {
+    cargar();
+  }
 </script>
 </body>
 </html>
