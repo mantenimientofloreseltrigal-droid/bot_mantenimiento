@@ -757,11 +757,22 @@
     }
     const marcado = (b) => (porEnviar.has(b) ? porEnviar.get(b) : servidor.has(b));
 
+    // Los bloques de la lista: los salteados (ej. 2, 3, 4, 5, 12) o el rango completo.
+    function bloquesDe(d) {
+      if (Array.isArray(d.lista) && d.lista.length) return [...new Set(d.lista)].sort((a, b) => a - b);
+      const todos = [];
+      for (let b = d.desde; b <= d.hasta; b++) todos.push(b);
+      return todos;
+    }
+    let bloques = [];
+
     function aplicar(d) {
       datos = d;
-      servidor = new Map((d.marcas || []).map((m) => [m.bloque, m.marcado_en]));
+      bloques = bloquesDe(d);
+      const validos = new Set(bloques);
+      servidor = new Map((d.marcas || []).filter((m) => validos.has(m.bloque)).map((m) => [m.bloque, m.marcado_en]));
       for (const [b, v] of [...porEnviar]) {
-        if (b < d.desde || b > d.hasta || v === servidor.has(b)) porEnviar.delete(b);
+        if (!validos.has(b) || v === servidor.has(b)) porEnviar.delete(b);
       }
       if (d.cerrada) porEnviar.clear();
       persistir();
@@ -771,7 +782,7 @@
       const grilla = $('bq-grilla');
       grilla.textContent = '';
       botones.clear();
-      for (let b = datos.desde; b <= datos.hasta; b++) {
+      for (const b of bloques) {
         const li = document.createElement('li');
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -787,7 +798,7 @@
     }
 
     function dibujar() {
-      const total = datos.hasta - datos.desde + 1;
+      const total = bloques.length;
       let hechos = 0;
       for (const [b, btn] of botones) {
         const si = marcado(b);
@@ -902,8 +913,9 @@
           mostrarError('Este enlace ya no funciona', 'Pídele a Juan el enlace de la lista de bloques.', false);
           return;
         }
-        const nueva = !datos || datos.desde !== d.desde || datos.hasta !== d.hasta;
+        const antes = datos ? bloques.join(',') : null;
         aplicar(d);
+        const nueva = antes !== bloques.join(',');
         $('bq-contexto').textContent = 'Lista de bloques' + (d.sede ? ' de ' + d.sede : '') + (d.nombre ? ', ' + d.nombre : '');
         $('bq-num').textContent = d.numero_os;
         $('bq-desc').textContent = d.descripcion;
