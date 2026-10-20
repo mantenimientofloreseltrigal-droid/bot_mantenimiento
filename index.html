@@ -225,6 +225,11 @@
     padding: 0 1.5rem;
   }
 
+  /* Orden con lista de bloques: la casilla grande no se toca, se marca sola */
+  .os--auto .os__fila { cursor: default; }
+  .os--auto .os__check:not(:checked) ~ .os__fila .os__caja { border-style: dashed; border-color: var(--gris); background: transparent; }
+  .os__auto { display: block; margin-top: 0.35rem; font-size: 0.875rem; color: var(--gris); }
+
   /* Enlace a la lista de bloques dentro de una orden de la revisión */
   .os__bloques {
     display: block;
@@ -469,6 +474,7 @@
 
   function pendientes() {
     return ordenes
+      .filter((o) => !(o.bloques && o.bloques.token))
       .filter((o) => marcadas.get(o.numero_os) !== o.ejecutada)
       .map((o) => ({ numero_os: o.numero_os, ejecutada: marcadas.get(o.numero_os) }));
   }
@@ -493,21 +499,31 @@
     const li = document.createElement('li');
     li.className = 'os';
     const id = 'os-' + i;
+    // Con lista de bloques, la casilla grande NO se marca a mano: aparece
+    // marcada sola cuando están todos los bloques.
+    const conBloques = !!(o.bloques && o.bloques.token);
+    const completa = conBloques && o.bloques.marcados >= o.bloques.total;
+    if (conBloques) li.classList.add('os--auto');
 
     const input = document.createElement('input');
     input.type = 'checkbox';
     input.className = 'os__check';
     input.id = id;
-    input.checked = !!marcadas.get(o.numero_os);
-    input.addEventListener('change', () => {
-      marcadas.set(o.numero_os, input.checked);
-      guardarBorrador();
-      actualizarBarra();
-    });
+    input.checked = conBloques ? completa : !!marcadas.get(o.numero_os);
+    if (conBloques) {
+      input.disabled = true;
+      input.tabIndex = -1;
+    } else {
+      input.addEventListener('change', () => {
+        marcadas.set(o.numero_os, input.checked);
+        guardarBorrador();
+        actualizarBarra();
+      });
+    }
 
-    const label = document.createElement('label');
+    const label = document.createElement(conBloques ? 'div' : 'label');
     label.className = 'os__fila';
-    label.htmlFor = id;
+    if (!conBloques) label.htmlFor = id;
 
     const edad = document.createElement('span');
     edad.className = 'os__edad ' + claseEdad;
@@ -537,7 +553,14 @@
     }
     cuerpo.append(num, desc, meta);
 
-    if (o.ejecutada) {
+    if (conBloques) {
+      const a = document.createElement('span');
+      a.className = 'os__auto';
+      a.textContent = completa
+        ? 'Están todos los bloques: la orden pasa a Resuelto sola.'
+        : 'Se marca sola cuando estén los ' + o.bloques.total + ' bloques.';
+      cuerpo.appendChild(a);
+    } else if (o.ejecutada) {
       const g = document.createElement('span');
       g.className = 'os__estado-guardado';
       g.textContent = 'Guardada como ejecutada';
