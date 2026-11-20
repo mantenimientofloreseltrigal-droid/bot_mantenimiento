@@ -104,6 +104,15 @@
   .hecha { margin: 0.8rem 0 0; padding: 0.65rem 0.75rem; background: #E3F0E5; border-radius: 8px; font-weight: 700; color: var(--hoja-oscura); }
   .hecha small { display: block; font-weight: 400; color: var(--gris); }
   .os--hecha .os__desc { color: var(--gris); }
+  .materiales { display: grid; gap: 0.6rem; }
+  .material { display: grid; gap: 0.4rem; padding: 0.6rem; background: var(--blanco); border: 1px solid var(--linea); border-radius: 8px; }
+  .material__fila { display: grid; grid-template-columns: 1fr 1fr 3rem; gap: 0.4rem; }
+  .material input, .material select { width: 100%; font: inherit; font-size: 1.0625rem; padding: 0.6rem 0.65rem; border: 1px solid #A9B5AC; border-radius: 8px; background: var(--blanco); color: var(--tinta); }
+  .material__quitar { padding: 0; min-height: 0; background: var(--blanco); color: var(--vencida); border: 1px solid var(--linea); font-size: 1.1rem; }
+  .boton--chico { min-height: 2.6rem; padding: 0.5rem 0.8rem; font-size: 1rem; }
+  .esperando__lista { margin: 0.35rem 0 0; padding-left: 1.2rem; }
+  .material__quitar:hover { background: #FBE4E2; }
+  .boton--secundario:hover { background: var(--film); }
   .novedades { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
   .novedades li { padding: 0.5rem 0.65rem; background: var(--blanco); border: 1px solid var(--linea); border-radius: 8px; }
   .novedades li span { display: block; }
@@ -253,6 +262,53 @@
     return true;
   }
 
+  const UNIDADES = ['und', 'm', 'cm', 'kg', 'g', 'L', 'gal', 'rollo', 'caja', 'par', 'juego', 'bolsa', 'tubo', 'lámina', 'm²'];
+  function numTexto(n) { const x = parseFloat(n); return Number.isInteger(x) ? String(x) : String(x).replace('.', ','); }
+  // "2 und — Rodamiento 6204" -> { material, cantidad, unidad }
+  function leerLista(texto) {
+    const items = [];
+    let nota = '';
+    for (const linea of String(texto || '').split(/\r?\n/)) {
+      const l = linea.replace(/^\s*[•*\-–]\s*/, '').trim();
+      if (!l) continue;
+      if (/^nota:/i.test(l)) { nota = l.replace(/^nota:\s*/i, ''); continue; }
+      const m = /^([\d.,]+)\s+(\S+)\s+—\s+(.+)$/.exec(l);
+      if (m) items.push({ cantidad: m[1].replace(',', '.'), unidad: m[2], material: m[3] });
+      else items.push({ cantidad: '', unidad: 'und', material: l });
+    }
+    return { items, nota };
+  }
+  function filaMaterial(o, contenedor, m) {
+    const fila = el('div', 'material');
+    const nombre = document.createElement('input');
+    nombre.type = 'text';
+    nombre.className = 'material__nombre';
+    nombre.maxLength = 120;
+    nombre.placeholder = 'Material, referencia o medida (ej. Rodamiento 6204)';
+    nombre.setAttribute('aria-label', 'Material');
+    nombre.value = m.material || '';
+    const cant = document.createElement('input');
+    cant.type = 'text';
+    cant.inputMode = 'decimal';
+    cant.className = 'material__cantidad';
+    cant.placeholder = 'Cantidad';
+    cant.setAttribute('aria-label', 'Cantidad');
+    cant.value = m.cantidad || '';
+    const uni = document.createElement('select');
+    uni.className = 'material__unidad';
+    uni.setAttribute('aria-label', 'Unidad');
+    const lista = UNIDADES.includes(m.unidad) || !m.unidad ? UNIDADES : UNIDADES.concat([m.unidad]);
+    for (const u of lista) uni.append(new Option(u, u));
+    uni.value = m.unidad || 'und';
+    const quitar = boton('✕', 'material__quitar');
+    quitar.setAttribute('aria-label', 'Quitar este material');
+    quitar.addEventListener('click', () => { if (contenedor.children.length > 1) fila.remove(); else { nombre.value = ''; cant.value = ''; } });
+    const abajo = el('div', 'material__fila');
+    abajo.append(cant, uni, quitar);
+    fila.append(nombre, abajo);
+    return fila;
+  }
+
   function pasoMateriales(o) {
     const paso = el('div', 'paso');
     const pregunta = el('p', 'paso__pregunta');
@@ -263,7 +319,11 @@
     if (o.materiales === 'no' && abiertas[o.numero_os] !== 'no') {
       const caja = el('div', 'esperando');
       caja.append(el('strong', '', 'Esperando materiales'));
-      caja.append(el('p', '', o.materiales_faltan || ''));
+      const leida = leerLista(o.materiales_faltan);
+      const ulm = el('ul', 'esperando__lista');
+      for (const it of leida.items) ulm.append(el('li', '', (it.cantidad ? numTexto(it.cantidad) + ' ' + it.unidad + ' — ' : '') + it.material));
+      caja.append(ulm);
+      if (leida.nota) caja.append(el('p', '', 'Nota: ' + leida.nota));
       if (o.materiales_en) caja.append(el('p', 'os__datos', 'Pedidos el ' + cuando(o.materiales_en) + (datos.rol === 'tecnico' ? ' · ya le llegó la lista a Juan y a su supervisor' : ' · ya le llegó la lista a Juan')));
       paso.append(caja);
       const fila = el('div', 'sino');
@@ -287,22 +347,45 @@
     no.addEventListener('click', () => { abiertas[o.numero_os] = 'no'; dibujar(); });
 
     if (abiertas[o.numero_os] === 'no') {
-      const id = 'faltan-' + o.numero_os;
-      const et = el('label', '', '¿Qué materiales le faltan? (cantidad, referencia, medida)');
-      et.htmlFor = id;
-      const area = document.createElement('textarea');
-      area.id = id;
-      area.maxLength = 500;
-      area.value = o.materiales === 'no' ? (o.materiales_faltan || '') : '';
+      // 20 nov (Juan): material por material, con su cantidad, para el
+      // consolidado de materiales por orden que le llega a él y al supervisor.
+      const et = el('p', 'paso__pregunta', '¿Qué materiales le faltan? Uno por renglón, con su cantidad.');
+      const filasMat = el('div', 'materiales');
+      filasMat.id = 'materiales-' + o.numero_os;
+      const previas = o.materiales === 'no' ? leerLista(o.materiales_faltan) : { items: [], nota: '' };
+      const agregarFila = (m) => filasMat.append(filaMaterial(o, filasMat, m || {}));
+      if (previas.items.length) previas.items.forEach(agregarFila); else agregarFila();
+      const otro = boton('+ Agregar otro material', 'boton--secundario boton--chico');
+      otro.addEventListener('click', () => { agregarFila(); const ult = filasMat.lastElementChild; if (ult) ult.querySelector('input').focus(); });
+      const idNota = 'nota-mat-' + o.numero_os;
+      const etNota = el('label', '', 'Nota para el pedido (opcional: urgencia, dónde se compra, marca…)');
+      etNota.htmlFor = idNota;
+      const nota = document.createElement('input');
+      nota.type = 'text';
+      nota.id = idNota;
+      nota.maxLength = 150;
+      nota.value = previas.nota || '';
       const enviar = boton('Enviar la lista');
       const aviso = el('p', 'os__datos', datos.rol === 'tecnico'
-        ? 'La lista le llega a Juan y a su supervisor por WhatsApp para pedirlos. La orden queda esperando materiales.'
-        : 'La lista le llega a Juan por WhatsApp para pedirlos. La orden queda esperando materiales.');
-      paso.append(et, area, aviso, enviar, estado);
+        ? 'La lista le llega a Juan y a su supervisor por WhatsApp, con el consolidado de materiales por orden. La orden queda esperando materiales.'
+        : 'La lista le llega a Juan por WhatsApp, con el consolidado de materiales por orden. La orden queda esperando materiales.');
+      paso.append(et, filasMat, otro, etNota, nota, aviso, enviar, estado);
       enviar.addEventListener('click', async () => {
-        const lista = area.value.trim();
-        if (lista.length < 3) { estado.className = 'os__estado os__estado--error'; estado.textContent = 'Escriba qué materiales le faltan.'; area.focus(); return; }
-        enviar.disabled = area.disabled = si.disabled = no.disabled = true;
+        const items = [...filasMat.querySelectorAll('.material')].map((f) => ({
+          material: f.querySelector('.material__nombre').value.trim(),
+          cantidad: f.querySelector('.material__cantidad').value.trim().replace(',', '.'),
+          unidad: f.querySelector('.material__unidad').value,
+        })).filter((m) => m.material || m.cantidad);
+        const malo = items.find((m) => !m.material || !(parseFloat(m.cantidad) > 0));
+        if (!items.length || malo) {
+          estado.className = 'os__estado os__estado--error';
+          estado.textContent = !items.length ? 'Escriba al menos un material con su cantidad.' : 'A cada material póngale el nombre y la cantidad.';
+          return;
+        }
+        const lista = items.map((m) => numTexto(m.cantidad) + ' ' + m.unidad + ' — ' + m.material.replace(/\s+/g, ' ')).join('\n')
+          + (nota.value.trim() ? '\nNota: ' + nota.value.trim() : '');
+        const controles = [enviar, otro, nota, si, no, ...filasMat.querySelectorAll('input, select, button')];
+        controles.forEach((c) => { c.disabled = true; });
         estado.className = 'os__estado';
         estado.textContent = 'Enviando…';
         try {
@@ -317,7 +400,7 @@
           }
           respuestaMala(r, estado);
         } catch (err) { mostrarFalla(estado, err); }
-        enviar.disabled = area.disabled = si.disabled = no.disabled = false;
+        controles.forEach((c) => { c.disabled = false; });
       });
     } else {
       paso.append(estado);
