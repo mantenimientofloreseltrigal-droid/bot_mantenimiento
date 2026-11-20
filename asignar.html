@@ -79,6 +79,11 @@
   .aviso { padding: 3rem 0; }
   .aviso h1 { font-family: var(--condensada); font-size: 2.25rem; margin: 0 0 0.5rem; }
   .nota { margin: 2rem 0 0; color: var(--gris); font-size: 0.875rem; }
+  .ir-ordenes { display: inline-block; margin-top: 0.75rem; font-weight: 700; color: var(--hoja); }
+  .os__ejec { display: block; font-weight: 700; }
+  .os__ejec--espera { color: var(--ambar); }
+  .os__ejec--hecha { color: var(--hoja); }
+  .os__candado { color: var(--gris); font-weight: 400; }
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -97,6 +102,7 @@
       <p class="encabezado__contexto" id="contexto"></p>
       <h1 class="encabezado__nombre" id="nombre"></h1>
       <p class="encabezado__resumen" id="resumen"></p>
+      <a class="ir-ordenes" id="ir-ordenes" href="#">Órdenes que usted confirma como ejecutadas →</a>
     </header>
     <h2 class="titulo-seccion" id="titulo-reasignar" hidden>Piden reasignación</h2>
     <ul class="lista" id="reasignar" hidden></ul>
@@ -284,8 +290,14 @@
         const motivo = (r && r.motivo) || '';
         if (motivo === 'ya_asignada') {
           estado.className = 'os__estado os__estado--error';
-          estado.textContent = 'Esta orden ya estaba asignada' + (r.tecnico_nombre ? ' a ' + r.tecnico_nombre : '') + '.';
-          setTimeout(cargar, 1500);
+          estado.textContent = 'Otra persona ya la asignó' + (r.tecnico_nombre ? ' a ' + r.tecnico_nombre : '') + '. No se cambió.';
+          setTimeout(cargar, 2500);
+          return;
+        }
+        if (motivo === 'orden_no_disponible') {
+          estado.className = 'os__estado os__estado--error';
+          estado.textContent = 'Esta orden ya se cerró o ya se marcó como ejecutada.';
+          setTimeout(cargar, 2500);
           return;
         }
         if (motivo === 'enlace_vencido' || motivo === 'enlace_invalido') {
@@ -316,6 +328,22 @@
     const cuando = o.asignado_en ? sinPunto(fmtDia.format(new Date(o.asignado_en))) : '';
     p.append(el('small', '', (o.reasignaciones ? 'Reasignada' : 'Asignada') + (o.asignado_por ? ' por ' + (NOMBRE[o.asignado_por] || o.asignado_por) : '') + (cuando ? ' el ' + cuando : '')
       + (o.tecnico_anterior_nombre ? ' · antes la tenía ' + o.tecnico_anterior_nombre : '')));
+    // Fase 2: cómo va la ejecución
+    if (o.ejecutada) {
+      const dia = o.ejecutada_en ? sinPunto(fmtDia.format(new Date(o.ejecutada_en))) : '';
+      p.append(el('small', 'os__ejec os__ejec--hecha', '✓ Ejecutada' + (o.ejecutada_por_nombre ? ' · la marcó ' + o.ejecutada_por_nombre : '') + (dia ? ' el ' + dia : '')));
+      if (o.ejecucion_obs) p.append(el('small', '', 'Observación: “' + o.ejecucion_obs + '”'));
+    } else if (o.materiales === 'no') {
+      p.append(el('small', 'os__ejec os__ejec--espera', '⏳ Esperando materiales'));
+    } else if (o.materiales === 'si') {
+      p.append(el('small', 'os__ejec', 'Tiene los materiales · por ejecutar'));
+    }
+    // 20 nov (Juan): se asigna UNA vez. Ya asignada, nadie (ni Juan ni el
+    // supervisor) la cambia aquí, salvo que el técnico pida reasignarla.
+    if (!o.ejecutada) p.append(el('small', 'os__candado', '🔒 Ya asignada: solo se cambia si el técnico pide reasignarla'));
+    if (!o.ejecutada && o.ultima_novedad && o.ultima_novedad.texto) {
+      p.append(el('small', '', '📝 ' + (o.ultima_novedad.por_nombre ? o.ultima_novedad.por_nombre + ': ' : '') + '“' + o.ultima_novedad.texto + '”'));
+    }
     li.append(p);
     return li;
   }
@@ -371,6 +399,8 @@
       datos = r;
       $('cargando').hidden = true;
       $('contenido').hidden = false;
+      // Fase 2: la misma persona confirma la ejecución en orden.html (mismo enlace).
+      $('ir-ordenes').href = location.pathname.replace(/[^/]*$/, 'orden.html') + '#t=' + encodeURIComponent(token);
       dibujar();
       if (resaltar) {
         const fila = document.getElementById(resaltar);

@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F2F5EF">
+<title>Mis órdenes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E6A3E'/%3E%3Cpath d='M7 17c2.4 1.9 4.4 4 6.3 6.6C17.2 16.7 21.6 11.3 26 8' fill='none' stroke='%23F6C744' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --film: #F2F5EF;
+    --blanco: #FFFFFF;
+    --tinta: #1B2A20;
+    --gris: #56665B;
+    --linea: #D2DACF;
+    --hoja: #2E6A3E;
+    --hoja-oscura: #22512F;
+    --crisantemo: #F6C744;
+    --crisantemo-lavado: #FFF3C4;
+    --ambar: #8A5A00;
+    --vencida: #B3261E;
+    --condensada: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif-condensed, sans-serif;
+    --texto: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--film); color: var(--tinta); font-family: var(--texto); font-size: 1.0625rem; line-height: 1.45; }
+  .hoja { max-width: 38rem; margin: 0 auto; padding: 0 16px calc(3rem + env(safe-area-inset-bottom)); }
+
+  .encabezado { padding: 1.75rem 0 1.25rem; }
+  .encabezado__contexto { margin: 0; color: var(--gris); font-size: 0.9375rem; }
+  .encabezado__nombre { margin: 0.1rem 0 0.5rem; font-family: var(--condensada); font-weight: 700; font-size: clamp(3rem, 15vw, 4.25rem); line-height: 0.95; letter-spacing: -0.01em; }
+  .encabezado__resumen { margin: 0; max-width: 32rem; }
+  .encabezado__resumen strong { font-weight: 700; }
+
+  .titulo-seccion { margin: 1.75rem 0 0.5rem; font-family: var(--condensada); font-weight: 700; font-size: 1.5rem; }
+  .lista { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--tinta); }
+  .os { border-bottom: 1px solid var(--linea); padding: 1rem 0.25rem 1.1rem; scroll-margin-top: 1rem; }
+  .os--resaltada { background: var(--crisantemo-lavado); }
+  .os__cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+  .os__num { font-family: var(--condensada); font-weight: 600; font-size: 1.05rem; color: var(--gris); letter-spacing: 0.01em; }
+  .os__edad { font-family: var(--condensada); font-weight: 600; font-size: 1rem; color: var(--gris); white-space: nowrap; }
+  .os__edad--media { color: var(--ambar); }
+  .os__edad--vieja { color: var(--vencida); }
+  .os__desc { margin: 0.2rem 0 0.35rem; font-size: 1.0625rem; }
+  .os__datos { margin: 0; color: var(--gris); font-size: 0.9375rem; }
+  .os__datos span + span::before { content: " · "; }
+  .etiqueta { display: inline-block; padding: 0 0.4rem; border-radius: 4px; font-size: 0.8125rem; font-weight: 700; background: var(--crisantemo-lavado); color: var(--ambar); vertical-align: 1px; }
+  .etiqueta--alta { background: #FBE4E2; color: var(--vencida); }
+
+  .asignar { margin-top: 0.8rem; display: grid; gap: 0.55rem; }
+  .asignar label { font-size: 0.9375rem; color: var(--gris); }
+  select, input[type=text] {
+    width: 100%; font: inherit; font-size: 1.0625rem; padding: 0.7rem 0.75rem; border: 1px solid #A9B5AC;
+    border-radius: 8px; background: var(--blanco); color: var(--tinta);
+  }
+  select:focus, input:focus { outline: 3px solid var(--crisantemo); outline-offset: 1px; }
+  .boton {
+    appearance: none; border: 0; border-radius: 10px; padding: 0.85rem 1rem; font: inherit; font-weight: 700; font-size: 1.0625rem;
+    background: var(--hoja); color: var(--blanco); cursor: pointer; min-height: 3rem;
+  }
+  .boton:hover { background: var(--hoja-oscura); }
+  .boton:disabled { background: #9AA79E; cursor: default; }
+  .boton--secundario { background: var(--blanco); color: var(--hoja); border: 2px solid var(--hoja); }
+  .os__estado { margin: 0.5rem 0 0; font-size: 0.9375rem; }
+  .os__estado--error { color: var(--vencida); font-weight: 700; }
+  .os__asignada { margin: 0.6rem 0 0; font-weight: 700; color: var(--hoja-oscura); }
+  .os__asignada small { display: block; font-weight: 400; color: var(--gris); }
+  .pedido { margin: 0.7rem 0 0; padding: 0.6rem 0.75rem; border-left: 4px solid var(--crisantemo); background: var(--crisantemo-lavado); border-radius: 0 8px 8px 0; }
+  .pedido strong { display: block; }
+  .pedido q { font-style: italic; }
+  .vacio { padding: 1.25rem 0; color: var(--gris); }
+  .aviso { padding: 3rem 0; }
+  .aviso h1 { font-family: var(--condensada); font-size: 2.25rem; margin: 0 0 0.5rem; }
+  .nota { margin: 2rem 0 0; color: var(--gris); font-size: 0.875rem; }
+  [hidden] { display: none !important; }
+
+  /* ---- orden.html (fase 2) ---- */
+  .os__cargo { margin: 0.35rem 0 0; font-size: 0.9375rem; font-weight: 700; color: var(--hoja-oscura); }
+  .paso { margin-top: 0.9rem; padding-top: 0.75rem; border-top: 1px dashed var(--linea); display: grid; gap: 0.55rem; }
+  .paso__pregunta { margin: 0; font-weight: 700; }
+  .paso__num { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; margin-right: 0.35rem; border-radius: 50%;
+    background: var(--tinta); color: var(--blanco); font-family: var(--condensada); font-size: 1rem; vertical-align: 1px; }
+  .sino { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+  .sino .boton { background: var(--blanco); color: var(--tinta); border: 2px solid #A9B5AC; }
+  .sino .boton[aria-pressed="true"].si { background: var(--hoja); border-color: var(--hoja); color: var(--blanco); }
+  .sino .boton[aria-pressed="true"].no { background: var(--ambar); border-color: var(--ambar); color: var(--blanco); }
+  textarea {
+    width: 100%; font: inherit; font-size: 1.0625rem; padding: 0.7rem 0.75rem; border: 1px solid #A9B5AC; min-height: 5.5rem;
+    border-radius: 8px; background: var(--blanco); color: var(--tinta); resize: vertical;
+  }
+  textarea:focus { outline: 3px solid var(--crisantemo); outline-offset: 1px; }
+  .paso label { font-size: 0.9375rem; color: var(--gris); }
+  .esperando { padding: 0.65rem 0.75rem; border-left: 4px solid var(--ambar); background: var(--crisantemo-lavado); border-radius: 0 8px 8px 0; }
+  .esperando strong { display: block; color: var(--ambar); }
+  .esperando p { margin: 0.25rem 0 0; }
+  .boton--ejecutar { font-size: 1.15rem; min-height: 3.4rem; }
+  .hecha { margin: 0.8rem 0 0; padding: 0.65rem 0.75rem; background: #E3F0E5; border-radius: 8px; font-weight: 700; color: var(--hoja-oscura); }
+  .hecha small { display: block; font-weight: 400; color: var(--gris); }
+  .os--hecha .os__desc { color: var(--gris); }
+  .novedades { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  .novedades li { padding: 0.5rem 0.65rem; background: var(--blanco); border: 1px solid var(--linea); border-radius: 8px; }
+  .novedades li span { display: block; }
+  .novedades__cuando { font-size: 0.8125rem; color: var(--gris); }
+</style>
+</head>
+<body>
+<main class="hoja">
+  <div class="aviso" id="cargando"><p>Cargando sus órdenes…</p></div>
+
+  <div class="aviso" id="error" hidden>
+    <h1 id="error-titulo">Este enlace ya no funciona</h1>
+    <p id="error-texto">Abra el enlace del mensaje más reciente que le llegó por WhatsApp.</p>
+    <button class="boton boton--secundario" id="reintentar" type="button" hidden>Reintentar</button>
+  </div>
+
+  <section id="contenido" hidden>
+    <header class="encabezado">
+      <p class="encabezado__contexto" id="contexto"></p>
+      <h1 class="encabezado__nombre" id="nombre"></h1>
+      <p class="encabezado__resumen" id="resumen"></p>
+    </header>
+    <h2 class="titulo-seccion" id="titulo-pendientes">Por ejecutar</h2>
+    <ul class="lista" id="pendientes"></ul>
+    <h2 class="titulo-seccion" id="titulo-hechas" hidden>Ejecutadas (últimos 3 días)</h2>
+    <ul class="lista" id="hechas" hidden></ul>
+    <p class="nota" id="nota"></p>
+  </section>
+</main>
+
+<script>
+  // ------------------------------------------------------------------
+  // CONFIGURACIÓN: la misma de la página de revisión (index.html).
+  // Va la llave PÚBLICA ("publishable" o "anon"). NUNCA la secreta.
+  // ------------------------------------------------------------------
+  const SUPABASE_URL = 'https://eqkzmrfnnjvqbkktkhmm.supabase.co';
+  const SUPABASE_LLAVE_PUBLICA = 'sb_publishable_nkxwQP7NT8kJVSyeqnsDrA_7RdLQfpM';
+  // ------------------------------------------------------------------
+
+  const ZONA = 'America/Bogota';
+  const $ = (id) => document.getElementById(id);
+  const parametros = new URLSearchParams(location.hash.slice(1));
+  const token = parametros.get('t') || new URLSearchParams(location.search).get('t') || '';
+  const resaltar = parametros.get('os') || '';
+  let datos = null;
+  const abiertas = {}; // numero_os -> 'no' (escribiendo la lista)
+  const avisos = {}; // numero_os -> texto para mostrar después de redibujar
+
+  function rpc(nombre, cuerpo) {
+    const headers = { apikey: SUPABASE_LLAVE_PUBLICA, 'Content-Type': 'application/json' };
+    if (SUPABASE_LLAVE_PUBLICA.startsWith('eyJ')) headers.Authorization = 'Bearer ' + SUPABASE_LLAVE_PUBLICA;
+    const control = new AbortController();
+    const reloj = setTimeout(() => control.abort(), 20000);
+    return fetch(SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/rpc/' + nombre, {
+      method: 'POST', headers, body: JSON.stringify(cuerpo), signal: control.signal,
+    }).then((res) => {
+      clearTimeout(reloj);
+      if (!res.ok) throw new Error('El servidor respondió ' + res.status);
+      return res.json();
+    }, (err) => { clearTimeout(reloj); throw err; });
+  }
+
+  const fmtDia = new Intl.DateTimeFormat('es-CO', { timeZone: ZONA, day: 'numeric', month: 'short' });
+  const fmtHora = new Intl.DateTimeFormat('es-CO', { timeZone: ZONA, hour: 'numeric', minute: '2-digit' });
+  const sinPunto = (s) => s.replace(/\./g, '');
+  function cuando(iso) { const d = new Date(iso); return sinPunto(fmtDia.format(d)) + ', ' + fmtHora.format(d).replace(/\s/g, '\u00a0'); }
+  function diasDesde(iso) { return Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 86400000)); }
+  function plural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+  function textoEdad(dias) { return dias === 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días'; }
+  const NOMBRE = { wilson: 'Wilson', angel: 'Ángel', juan: 'Juan', bot: 'el bot' };
+
+  function mostrarError(titulo, texto, conReintento) {
+    $('cargando').hidden = true;
+    $('contenido').hidden = true;
+    $('error-titulo').textContent = titulo;
+    $('error-texto').textContent = texto;
+    $('reintentar').hidden = !conReintento;
+    $('error').hidden = false;
+  }
+  function el(tag, clase, texto) {
+    const e = document.createElement(tag);
+    if (clase) e.className = clase;
+    if (texto != null) e.textContent = texto;
+    return e;
+  }
+  function boton(texto, clase) {
+    const b = el('button', 'boton' + (clase ? ' ' + clase : ''), texto);
+    b.type = 'button';
+    return b;
+  }
+
+  function cabezaOrden(o) {
+    const frag = document.createDocumentFragment();
+    const cabeza = el('div', 'os__cabeza');
+    cabeza.append(el('span', 'os__num', o.numero_os));
+    const dias = diasDesde(o.fecha_creacion);
+    cabeza.append(el('span', 'os__edad' + (dias > 14 ? ' os__edad--vieja' : dias > 5 ? ' os__edad--media' : ''), textoEdad(dias)));
+    frag.append(cabeza);
+    const desc = el('p', 'os__desc');
+    if (o.prioridad) desc.append(el('span', 'etiqueta' + (o.prioridad === 'Alta' ? ' etiqueta--alta' : ''), o.prioridad), document.createTextNode(' '));
+    desc.append(document.createTextNode(o.descripcion || '(sin descripción)'));
+    frag.append(desc);
+    const datosP = el('p', 'os__datos');
+    if (o.ubicacion) datosP.append(el('span', '', '📍 ' + o.ubicacion));
+    if (o.persona_reporta) datosP.append(el('span', '', 'Reportó ' + o.persona_reporta));
+    if (o.tiene_foto) datosP.append(el('span', '', '📷 foto en el grupo MANTENIMIENTO OLAS'));
+    frag.append(datosP);
+    if (datos.rol !== 'tecnico') frag.append(el('p', 'os__cargo', '👷 ' + (o.tecnico_nombre || o.tecnico)));
+    if (o.reaperturas) {
+      const r = el('div', 'pedido');
+      r.append(el('strong', '', '🔁 Reabierta: quien reportó dice que sigue igual'));
+      frag.append(r);
+    }
+    if (o.pide_reasignar) {
+      const r = el('div', 'pedido');
+      r.append(el('strong', '', '🔁 Pidió reasignarla'), document.createTextNode('Mientras su supervisor decide, sigue a su cargo.'));
+      frag.append(r);
+    }
+    return frag;
+  }
+
+  function estadoP() {
+    const p = el('p', 'os__estado');
+    p.setAttribute('role', 'status');
+    return p;
+  }
+  function mostrarFalla(p, err) {
+    p.className = 'os__estado os__estado--error';
+    p.textContent = 'No se pudo guardar (' + err.message + '). Revise la señal e intente de nuevo.';
+  }
+  function respuestaMala(r, p) {
+    const motivo = (r && r.motivo) || '';
+    if (motivo === 'enlace_vencido' || motivo === 'enlace_invalido') {
+      mostrarError('Este enlace ya no funciona', 'Abra el enlace del mensaje más reciente que le llegó por WhatsApp.', false);
+      return true;
+    }
+    const textos = {
+      ya_ejecutada: 'Esta orden ya estaba marcada como ejecutada' + (r && r.ejecutada_por_nombre ? ' por ' + r.ejecutada_por_nombre : '') + '.',
+      orden_no_disponible: 'Esta orden ya está cerrada.',
+      no_es_suya: 'Esta orden ya no está a su cargo.',
+      faltan_materiales: 'Primero responda si tiene los materiales.',
+      falta_lista: 'Escriba qué materiales le faltan.',
+    };
+    p.className = 'os__estado os__estado--error';
+    p.textContent = textos[motivo] || 'No se pudo guardar (' + (motivo || 'sin respuesta') + ').';
+    if (motivo === 'ya_ejecutada' || motivo === 'orden_no_disponible' || motivo === 'no_es_suya') setTimeout(cargar, 1800);
+    return true;
+  }
+
+  function pasoMateriales(o) {
+    const paso = el('div', 'paso');
+    const pregunta = el('p', 'paso__pregunta');
+    pregunta.append(el('span', 'paso__num', '1'), document.createTextNode('¿Tiene los materiales para ejecutar la intervención?'));
+    paso.append(pregunta);
+    const estado = estadoP();
+
+    if (o.materiales === 'no' && abiertas[o.numero_os] !== 'no') {
+      const caja = el('div', 'esperando');
+      caja.append(el('strong', '', 'Esperando materiales'));
+      caja.append(el('p', '', o.materiales_faltan || ''));
+      if (o.materiales_en) caja.append(el('p', 'os__datos', 'Pedidos el ' + cuando(o.materiales_en) + (datos.rol === 'tecnico' ? ' · ya le llegó la lista a Juan y a su supervisor' : ' · ya le llegó la lista a Juan')));
+      paso.append(caja);
+      const fila = el('div', 'sino');
+      const ya = boton('Ya los tengo', 'si');
+      const cambiar = boton('Cambiar la lista', 'no');
+      fila.append(ya, cambiar);
+      paso.append(fila, estado);
+      ya.addEventListener('click', () => guardarSi(o, [ya, cambiar], estado));
+      cambiar.addEventListener('click', () => { abiertas[o.numero_os] = 'no'; dibujar(); });
+      return paso;
+    }
+
+    const fila = el('div', 'sino');
+    const si = boton('Sí', 'si');
+    const no = boton('No', 'no');
+    si.setAttribute('aria-pressed', String(o.materiales === 'si'));
+    no.setAttribute('aria-pressed', String(abiertas[o.numero_os] === 'no'));
+    fila.append(si, no);
+    paso.append(fila);
+    si.addEventListener('click', () => { if (o.materiales !== 'si') guardarSi(o, [si, no], estado); });
+    no.addEventListener('click', () => { abiertas[o.numero_os] = 'no'; dibujar(); });
+
+    if (abiertas[o.numero_os] === 'no') {
+      const id = 'faltan-' + o.numero_os;
+      const et = el('label', '', '¿Qué materiales le faltan? (cantidad, referencia, medida)');
+      et.htmlFor = id;
+      const area = document.createElement('textarea');
+      area.id = id;
+      area.maxLength = 500;
+      area.value = o.materiales === 'no' ? (o.materiales_faltan || '') : '';
+      const enviar = boton('Enviar la lista');
+      const aviso = el('p', 'os__datos', datos.rol === 'tecnico'
+        ? 'La lista le llega a Juan y a su supervisor por WhatsApp para pedirlos. La orden queda esperando materiales.'
+        : 'La lista le llega a Juan por WhatsApp para pedirlos. La orden queda esperando materiales.');
+      paso.append(et, area, aviso, enviar, estado);
+      enviar.addEventListener('click', async () => {
+        const lista = area.value.trim();
+        if (lista.length < 3) { estado.className = 'os__estado os__estado--error'; estado.textContent = 'Escriba qué materiales le faltan.'; area.focus(); return; }
+        enviar.disabled = area.disabled = si.disabled = no.disabled = true;
+        estado.className = 'os__estado';
+        estado.textContent = 'Enviando…';
+        try {
+          const r = await rpc('ejecutar_materiales', { p_token: token, p_numero_os: o.numero_os, p_tiene: false, p_faltan: lista });
+          if (r && r.ok) {
+            o.materiales = 'no';
+            o.materiales_faltan = lista;
+            o.materiales_en = r.materiales_en || o.materiales_en || new Date().toISOString();
+            delete abiertas[o.numero_os];
+            dibujar();
+            return;
+          }
+          respuestaMala(r, estado);
+        } catch (err) { mostrarFalla(estado, err); }
+        enviar.disabled = area.disabled = si.disabled = no.disabled = false;
+      });
+    } else {
+      paso.append(estado);
+    }
+    return paso;
+  }
+
+  async function guardarSi(o, botones, estado) {
+    botones.forEach((b) => { b.disabled = true; });
+    estado.className = 'os__estado';
+    estado.textContent = 'Guardando…';
+    try {
+      const r = await rpc('ejecutar_materiales', { p_token: token, p_numero_os: o.numero_os, p_tiene: true, p_faltan: null });
+      if (r && r.ok) {
+        o.materiales = 'si';
+        delete abiertas[o.numero_os];
+        dibujar();
+        const b = document.getElementById('ejecutar-' + o.numero_os);
+        if (b) b.scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      respuestaMala(r, estado);
+    } catch (err) { mostrarFalla(estado, err); }
+    botones.forEach((b) => { b.disabled = false; });
+  }
+
+  // Paso 2 (20 nov, pedido de Juan): espacio para anotar observaciones o
+  // novedades de la intervención. "Guardar novedad" la deja anotada sin cerrar
+  // la orden; "Marcar como ejecutada" la cierra con ese texto como observación.
+  function pasoEjecutar(o) {
+    const paso = el('div', 'paso');
+    const pregunta = el('p', 'paso__pregunta');
+    pregunta.append(el('span', 'paso__num', '2'), document.createTextNode('Observaciones o novedades de la intervención'));
+    paso.append(pregunta);
+    const previas = Array.isArray(o.novedades) ? o.novedades : [];
+    if (previas.length) {
+      const ul = el('ul', 'novedades');
+      for (const n of previas) {
+        const li = el('li', '');
+        li.append(el('span', 'novedades__cuando', (n.en ? cuando(n.en) : '') + (n.por_nombre ? ' · ' + n.por_nombre : '')));
+        li.append(el('span', '', n.texto || ''));
+        ul.append(li);
+      }
+      paso.append(ul);
+    }
+    const id = 'obs-' + o.numero_os;
+    const et = el('label', '', o.tecnico === 'contratista'
+      ? 'Qué hizo el contratista, qué se encontró, qué queda pendiente'
+      : 'Qué se hizo, qué se encontró, repuestos cambiados, qué queda pendiente');
+    et.htmlFor = id;
+    const area = document.createElement('textarea');
+    area.id = id;
+    area.maxLength = 500;
+    area.placeholder = 'Ej.: Se cambió el contactor. El motor está recalentando, conviene revisarlo la otra semana.';
+    const guardar = boton('Guardar novedad (la orden sigue abierta)', 'boton--secundario');
+    guardar.id = 'novedad-' + o.numero_os;
+    const listo = o.materiales === 'si' && abiertas[o.numero_os] !== 'no';
+    const b = boton('✓ Marcar como ejecutada', 'boton--ejecutar');
+    b.id = 'ejecutar-' + o.numero_os;
+    const estado = estadoP();
+    paso.append(et, area, guardar);
+    if (listo) paso.append(b);
+    else paso.append(el('p', 'os__datos', 'Para marcarla como ejecutada, primero responda que sí tiene los materiales.'));
+    paso.append(estado);
+    if (avisos[o.numero_os]) { estado.textContent = avisos[o.numero_os]; delete avisos[o.numero_os]; }
+
+    guardar.addEventListener('click', async () => {
+      const texto = area.value.trim();
+      if (texto.length < 3) { estado.className = 'os__estado os__estado--error'; estado.textContent = 'Escriba la observación o novedad.'; area.focus(); return; }
+      guardar.disabled = b.disabled = area.disabled = true;
+      estado.className = 'os__estado';
+      estado.textContent = 'Guardando…';
+      try {
+        const r = await rpc('ejecutar_novedad', { p_token: token, p_numero_os: o.numero_os, p_texto: texto });
+        if (r && r.ok) {
+          o.novedades = previas.concat([{ texto, por_nombre: r.por_nombre || datos.nombre, en: r.en || new Date().toISOString() }]);
+          avisos[o.numero_os] = '✓ Novedad guardada. La orden sigue abierta.';
+          dibujar();
+          return;
+        }
+        respuestaMala(r, estado);
+      } catch (err) { mostrarFalla(estado, err); }
+      guardar.disabled = b.disabled = area.disabled = false;
+    });
+
+    b.addEventListener('click', async () => {
+      const texto = area.value.trim();
+      const pregunta = '¿Marcar la ' + o.numero_os + ' como EJECUTADA?\n\n'
+        + (texto ? 'Observación: «' + texto.slice(0, 160) + (texto.length > 160 ? '…' : '') + '»\n\n' : 'Sin observaciones.\n\n')
+        + 'A ' + (o.persona_reporta || 'quien la reportó') + ' le llega el aviso de que quedó resuelta.';
+      if (!confirm(pregunta)) return;
+      b.disabled = guardar.disabled = area.disabled = true;
+      estado.className = 'os__estado';
+      estado.textContent = 'Guardando…';
+      try {
+        const r = await rpc('ejecutar_marcar', { p_token: token, p_numero_os: o.numero_os, p_observacion: texto });
+        if (r && r.ok) {
+          o.ejecutada = true;
+          o.ejecutada_en = r.ejecutada_en || new Date().toISOString();
+          o.ejecutada_por_nombre = r.ejecutada_por_nombre || datos.nombre;
+          o.ejecucion_obs = texto;
+          dibujar();
+          return;
+        }
+        respuestaMala(r, estado);
+      } catch (err) { mostrarFalla(estado, err); }
+      b.disabled = guardar.disabled = area.disabled = false;
+    });
+    return paso;
+  }
+
+  function filaPendiente(o) {
+    const li = el('li', 'os');
+    li.id = o.numero_os;
+    if (o.numero_os === resaltar) li.classList.add('os--resaltada');
+    li.append(cabezaOrden(o));
+    li.append(pasoMateriales(o));
+    li.append(pasoEjecutar(o));
+    return li;
+  }
+
+  function filaHecha(o) {
+    const li = el('li', 'os os--hecha');
+    li.id = o.numero_os;
+    if (o.numero_os === resaltar) li.classList.add('os--resaltada');
+    li.append(cabezaOrden(o));
+    const p = el('p', 'hecha', '✓ Ejecutada');
+    p.append(el('small', '', (o.ejecutada_por_nombre ? 'La marcó ' + o.ejecutada_por_nombre + ' · ' : '') + (o.ejecutada_en ? cuando(o.ejecutada_en) : '')));
+    if (o.ejecucion_obs) p.append(el('small', '', 'Observación: “' + o.ejecucion_obs + '”'));
+    for (const n of (Array.isArray(o.novedades) ? o.novedades : [])) p.append(el('small', '', 'Novedad' + (n.en ? ' del ' + cuando(n.en) : '') + ': “' + n.texto + '”'));
+    li.append(p);
+    return li;
+  }
+
+  function dibujar() {
+    const pendientes = datos.ordenes.filter((o) => !o.ejecutada);
+    const hechas = datos.ordenes.filter((o) => o.ejecutada);
+    const esperando = pendientes.filter((o) => o.materiales === 'no').length;
+    $('contexto').textContent = 'Sede ' + (datos.sede === 'OLAS' ? 'Olas' : datos.sede) + ' · ' + (datos.rol === 'tecnico' ? 'Mis órdenes' : 'Órdenes por confirmar');
+    $('nombre').textContent = datos.rol === 'tecnico' ? String(datos.nombre || '').split(/\s+/)[0] : datos.nombre;
+    $('resumen').innerHTML = '';
+    if (pendientes.length) {
+      $('resumen').append('Tiene ', el('strong', '', plural(pendientes.length, 'orden', 'órdenes') + ' por ejecutar'));
+      if (esperando) $('resumen').append(' (', el('strong', '', esperando + ' esperando materiales'), ')');
+      $('resumen').append('. Responda si tiene los materiales, anote lo que hizo o encontró y, cuando termine, márquela como ejecutada.');
+    } else {
+      $('resumen').textContent = 'No tiene órdenes por ejecutar. 👍';
+    }
+    const ul = $('pendientes');
+    ul.innerHTML = '';
+    if (!pendientes.length) ul.append(el('li', 'vacio', 'Nada pendiente.'));
+    for (const o of pendientes) ul.append(filaPendiente(o));
+    const uh = $('hechas');
+    uh.innerHTML = '';
+    hechas.sort((a, b) => String(b.ejecutada_en).localeCompare(String(a.ejecutada_en)));
+    for (const o of hechas) uh.append(filaHecha(o));
+    uh.hidden = $('titulo-hechas').hidden = !hechas.length;
+    $('nota').textContent = datos.rol === 'tecnico'
+      ? 'Anote en cada orden lo que hizo o encontró: queda guardado en la orden. Al marcarla ejecutada, a quien la reportó le llega el aviso de que quedó resuelta. Si una orden no le corresponde, responda por WhatsApp REASIGNAR y el número, con el motivo.'
+      : 'Aquí salen las órdenes que usted confirma: las de técnicos que no reciben mensajes y las de contratistas. Al marcarla ejecutada, a quien la reportó le llega el aviso de que quedó resuelta.';
+  }
+
+  async function cargar() {
+    if (!token) {
+      mostrarError('Falta el enlace', 'Abra el enlace tal como le llegó por WhatsApp.', false);
+      return;
+    }
+    $('error').hidden = true;
+    $('cargando').hidden = false;
+    try {
+      const r = await rpc('ejecutar_lista', { p_token: token });
+      if (!r || !r.ok) {
+        const vencido = r && r.motivo === 'enlace_vencido';
+        mostrarError(vencido ? 'Este enlace se venció' : 'Este enlace ya no funciona',
+          'Abra el enlace del mensaje más reciente que le llegó por WhatsApp.', false);
+        return;
+      }
+      datos = r;
+      $('cargando').hidden = true;
+      $('contenido').hidden = false;
+      dibujar();
+      if (resaltar) {
+        const fila = document.getElementById(resaltar);
+        if (fila) fila.scrollIntoView({ block: 'start' });
+      }
+    } catch (err) {
+      mostrarError('No se pudo cargar', 'Revise la señal o el internet e intente de nuevo. (' + err.message + ')', true);
+    }
+  }
+
+  $('reintentar').addEventListener('click', cargar);
+  cargar();
+</script>
+</body>
+</html>
