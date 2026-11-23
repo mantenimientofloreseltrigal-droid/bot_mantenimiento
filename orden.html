@@ -79,6 +79,7 @@
   .aviso { padding: 3rem 0; }
   .aviso h1 { font-family: var(--condensada); font-size: 2.25rem; margin: 0 0 0.5rem; }
   .nota { margin: 2rem 0 0; color: var(--gris); font-size: 0.875rem; }
+  .nota-seccion { margin: -0.25rem 0 0.75rem; color: var(--gris); font-size: 0.9375rem; }
   [hidden] { display: none !important; }
 
   /* ---- orden.html (fase 2) ---- */
@@ -137,6 +138,9 @@
     </header>
     <h2 class="titulo-seccion" id="titulo-pendientes">Por ejecutar</h2>
     <ul class="lista" id="pendientes"></ul>
+    <h2 class="titulo-seccion" id="titulo-tecnicos" hidden>De sus técnicos</h2>
+    <p class="nota-seccion" id="nota-tecnicos" hidden>Las marca el técnico desde su enlace. Si ya quedó hecha, también la puede cerrar usted: al técnico le llega un aviso.</p>
+    <ul class="lista" id="de-tecnicos" hidden></ul>
     <h2 class="titulo-seccion" id="titulo-hechas" hidden>Ejecutadas (últimos 3 días)</h2>
     <ul class="lista" id="hechas" hidden></ul>
     <p class="nota" id="nota"></p>
@@ -538,23 +542,38 @@
   }
 
   function dibujar() {
-    const pendientes = datos.ordenes.filter((o) => !o.ejecutada);
+    const esTecnico = datos.rol === 'tecnico';
+    const todas = datos.ordenes.filter((o) => !o.ejecutada);
+    // 23 nov (Juan): el supervisor también puede cerrar las de sus técnicos.
+    // Van aparte de las que confirma él (contratistas y técnicos sin mensajes).
+    // Sin el SQL nuevo no viene "la_confirma": todo va en la primera lista.
+    const deTecnicos = esTecnico ? [] : todas.filter((o) => o.la_confirma === false);
+    const pendientes = esTecnico ? todas : todas.filter((o) => o.la_confirma !== false);
     const hechas = datos.ordenes.filter((o) => o.ejecutada);
     const esperando = pendientes.filter((o) => o.materiales === 'no').length;
-    $('contexto').textContent = 'Sede ' + (datos.sede === 'OLAS' ? 'Olas' : datos.sede) + ' · ' + (datos.rol === 'tecnico' ? 'Mis órdenes' : 'Órdenes por confirmar');
-    $('nombre').textContent = datos.rol === 'tecnico' ? String(datos.nombre || '').split(/\s+/)[0] : datos.nombre;
+    $('contexto').textContent = 'Sede ' + (datos.sede === 'OLAS' ? 'Olas' : datos.sede) + ' · ' + (esTecnico ? 'Mis órdenes' : 'Órdenes por cerrar');
+    $('nombre').textContent = esTecnico ? String(datos.nombre || '').split(/\s+/)[0] : datos.nombre;
     $('resumen').innerHTML = '';
     if (pendientes.length) {
-      $('resumen').append('Tiene ', el('strong', '', plural(pendientes.length, 'orden', 'órdenes') + ' por ejecutar'));
+      $('resumen').append('Tiene ', el('strong', '', plural(pendientes.length, 'orden', 'órdenes') + (esTecnico ? ' por ejecutar' : ' por confirmar')));
       if (esperando) $('resumen').append(' (', el('strong', '', esperando + ' esperando materiales'), ')');
+      if (deTecnicos.length) $('resumen').append(' y ', el('strong', '', plural(deTecnicos.length, 'orden', 'órdenes') + ' de sus técnicos'));
       $('resumen').append('. Responda si tiene los materiales, anote lo que hizo o encontró y, cuando termine, márquela como ejecutada.');
+    } else if (deTecnicos.length) {
+      $('resumen').append('Sus técnicos tienen ', el('strong', '', plural(deTecnicos.length, 'orden', 'órdenes') + ' por ejecutar'), '. Las marca cada técnico; usted también las puede cerrar.');
     } else {
       $('resumen').textContent = 'No tiene órdenes por ejecutar. 👍';
     }
+    $('titulo-pendientes').textContent = esTecnico ? 'Por ejecutar' : 'Por confirmar';
     const ul = $('pendientes');
     ul.innerHTML = '';
     if (!pendientes.length) ul.append(el('li', 'vacio', 'Nada pendiente.'));
     for (const o of pendientes) ul.append(filaPendiente(o));
+    const ut = $('de-tecnicos');
+    ut.innerHTML = '';
+    for (const o of deTecnicos) ut.append(filaPendiente(o));
+    ut.hidden = $('titulo-tecnicos').hidden = $('nota-tecnicos').hidden = !deTecnicos.length;
+    $('titulo-tecnicos').textContent = datos.rol === 'juan' ? 'De los técnicos' : 'De sus técnicos';
     const uh = $('hechas');
     uh.innerHTML = '';
     hechas.sort((a, b) => String(b.ejecutada_en).localeCompare(String(a.ejecutada_en)));
@@ -562,7 +581,7 @@
     uh.hidden = $('titulo-hechas').hidden = !hechas.length;
     $('nota').textContent = datos.rol === 'tecnico'
       ? 'Anote en cada orden lo que hizo o encontró: queda guardado en la orden. Al marcarla ejecutada, a quien la reportó le llega el aviso de que quedó resuelta. Si una orden no le corresponde, responda por WhatsApp REASIGNAR y el número, con el motivo.'
-      : 'Aquí salen las órdenes que usted confirma: las de técnicos que no reciben mensajes y las de contratistas. Al marcarla ejecutada, a quien la reportó le llega el aviso de que quedó resuelta.';
+      : 'Arriba, las órdenes que usted confirma: las de técnicos que no reciben mensajes y las de contratistas. Abajo, las de sus técnicos: las marca el técnico, pero usted también las puede cerrar (al técnico le llega un aviso). Al marcarla ejecutada, a quien la reportó le llega el aviso de que quedó resuelta.';
   }
 
   async function cargar() {

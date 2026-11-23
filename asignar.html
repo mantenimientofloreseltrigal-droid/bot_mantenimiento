@@ -83,6 +83,7 @@
   .os__ejec { display: block; font-weight: 700; }
   .os__ejec--espera { color: var(--ambar); }
   .os__ejec--hecha { color: var(--hoja); }
+  .os__cerrar { display: inline-block; margin-top: 0.4rem; font-weight: 700; color: var(--hoja); }
   .os__candado { color: var(--gris); font-weight: 400; }
   [hidden] { display: none !important; }
 </style>
@@ -102,7 +103,7 @@
       <p class="encabezado__contexto" id="contexto"></p>
       <h1 class="encabezado__nombre" id="nombre"></h1>
       <p class="encabezado__resumen" id="resumen"></p>
-      <a class="ir-ordenes" id="ir-ordenes" href="#">Órdenes que usted confirma como ejecutadas →</a>
+      <a class="ir-ordenes" id="ir-ordenes" href="#">Marcar órdenes ejecutadas (también las de sus técnicos) →</a>
     </header>
     <h2 class="titulo-seccion" id="titulo-reasignar" hidden>Piden reasignación</h2>
     <ul class="lista" id="reasignar" hidden></ul>
@@ -131,6 +132,7 @@
   const token = (parametros.get('t') || new URLSearchParams(location.search).get('t') || '').replace(/[^A-Za-z0-9_-]/g, '');
   const resaltar = (parametros.get('os') || '').replace(/[^A-Za-z0-9-]/g, '');
   let datos = null;
+  const urlOrden = () => location.pathname.replace(/[^/]*$/, 'orden.html') + '#t=' + encodeURIComponent(token);
 
   function rpc(nombre, cuerpo) {
     const headers = { apikey: SUPABASE_LLAVE_PUBLICA, 'Content-Type': 'application/json' };
@@ -346,6 +348,12 @@
     if (!o.ejecutada && o.ultima_novedad && o.ultima_novedad.texto) {
       p.append(el('small', '', '📝 ' + (o.ultima_novedad.por_nombre ? o.ultima_novedad.por_nombre + ': ' : '') + '“' + o.ultima_novedad.texto + '”'));
     }
+    // 23 nov (Juan): el supervisor también puede cerrar las de sus técnicos.
+    if (!o.ejecutada && o.tecnico) {
+      const a = el('a', 'os__cerrar', 'Marcarla ejecutada →');
+      a.href = urlOrden() + '&os=' + encodeURIComponent(o.numero_os);
+      p.append(a);
+    }
     li.append(p);
     return li;
   }
@@ -402,7 +410,7 @@
       $('cargando').hidden = true;
       $('contenido').hidden = false;
       // Fase 2: la misma persona confirma la ejecución en orden.html (mismo enlace).
-      $('ir-ordenes').href = location.pathname.replace(/[^/]*$/, 'orden.html') + '#t=' + encodeURIComponent(token);
+      $('ir-ordenes').href = urlOrden();
       dibujar();
       if (resaltar) {
         const fila = document.getElementById(resaltar);
