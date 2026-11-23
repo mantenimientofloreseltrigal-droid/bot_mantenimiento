@@ -126,8 +126,10 @@
   const ZONA = 'America/Bogota';
   const $ = (id) => document.getElementById(id);
   const parametros = new URLSearchParams(location.hash.slice(1));
-  const token = parametros.get('t') || new URLSearchParams(location.search).get('t') || '';
-  const resaltar = parametros.get('os') || '';
+  // Solo letras, números, - y _: WhatsApp a veces pega al enlace un carácter
+  // invisible del final del mensaje y el enlace dejaba de funcionar.
+  const token = (parametros.get('t') || new URLSearchParams(location.search).get('t') || '').replace(/[^A-Za-z0-9_-]/g, '');
+  const resaltar = (parametros.get('os') || '').replace(/[^A-Za-z0-9-]/g, '');
   let datos = null;
 
   function rpc(nombre, cuerpo) {
